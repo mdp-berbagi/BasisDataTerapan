@@ -9,9 +9,9 @@ use database_stock;
 -- CREATE TABLE BARANG
 CREATE TABLE `barang`(
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  kode VARCHAR(25) NOT NULL,
-  nama VARCHAR(50) NOT NULL,
-  satuan VARCHAR(10) NOT NULL
+  kode VARCHAR(50) NOT NULL,
+  nama VARCHAR(100) NOT NULL,
+  satuan VARCHAR(20) NOT NULL
 );
 
 -- CREATE TABLE STOCK
@@ -24,11 +24,81 @@ CREATE TABLE `stock`(
 -- CREATE TABLE HARGA
 CREATE TABLE `harga`(
   barang_id INT UNSIGNED NOT NULL,
-  harga_mati INT NOT NULL,
+  nilai INT NOT NULL,
   tgl DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- INSERT TABLE `barang`
 INSERT INTO `barang`(kode,nama,satuan) VALUES
   ('BM001', 'Minyak Bimolo 1 KG', 'Botol'),
-  ('BM001', 'Minyak Bimolo 2 KG', 'Botol');
+  ('BM001', 'Minyak Bimolo 2 KG', 'Botol'),
+  ('CR001', 'Shampo Clear', 'Botol'),
+  ('LX001', 'Sabun Lux', 'Buah'),
+  ('PP001', 'Pepsodent Kecil', 'Kotak'),
+  ('PP002', 'Pepsodent Besar', 'Kotak'),
+  ('PS001', 'Pocari Sweat', 'Kaleng'),
+  ('SM001', 'Sampoerna Mild 16 Batang', 'Bungkus'),
+  ('SM002', 'Sampoerna Mild 12 Batang', 'Bungkus'),
+  ('SM003', 'Sampoerna Hijau', 'Bungkus'),
+  ('SN001', 'Shampo Sunsik', 'Botol'),
+  ('YL001', 'Yakult', 'Kaleng');
+
+INSERT INTO `stock`(barang_id, jumlah, tgl) VALUES
+  ('1', '2432', NOW()),
+  ('2', '2112', NOW()),
+  ('3', '1244', NOW()),
+  ('4', '1298', NOW()),
+  ('5', '5432', NOW()),
+  ('6', '6432', NOW()),
+  ('7', '2432', NOW()),
+  ('8', '9432', NOW()),
+  ('9', '9432', NOW()),
+  ('10', '7232', NOW()),
+  ('11', '5633', NOW()),
+  ('12', '5242', NOW());
+
+INSERT INTO `harga`(barang_id, nilai, tgl) VALUES
+  ('1', '5000', '2019-01-01'),
+  ('1', '4100', '2019-05-01'),
+  ('1', '4500', NOW()),
+  ('2', '1000', NOW()),
+  ('3', '8000', NOW()),
+  ('4', '1000', NOW()),
+  ('5', '3400', NOW()),
+  ('6', '5000', NOW()),
+  ('7', '5000', NOW()),
+  ('8', '9800', NOW()),
+  ('9', '6700', NOW()),
+  ('10', '6800', NOW()),
+  ('11', '2000', NOW()),
+  ('12', '1200', NOW());
+
+-- No 1) UPDATE di TABLE `BARANG` dari satuan 'Kaleng' ke 'Botol'
+UPDATE `barang`
+  SET `satuan` = 'Botol'
+  WHERE `satuan` = 'Kaleng';
+
+-- No 2) Tampilkan kode,merk,harga,stock dan total harga
+SELECT
+  `id`,
+  `kode`,
+  `nama`,
+  `satuan`,
+  SUM(`stock`.`jumlah`) AS `jumlah`,
+  `harga`.`nilai` AS `harga`
+  FROM
+    `barang`
+  JOIN
+    `stock` ON `stock`.`barang_id` = `barang`.`id`
+  JOIN
+    `harga` ON
+      `harga`.`barang_id` = `barang`.`id`
+      AND
+      `harga`.`tgl` = (
+        SELECT MAX(`tgl`) FROM `harga`
+        WHERE `barang_id` = `barang`.`id`
+      )
+  GROUP BY
+    `barang`.`id`
+
+-- No 3) Tampilkan Merk dan Harga Yang memiliki satuan Botol dan Harganya di atas 2000
