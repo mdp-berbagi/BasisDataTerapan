@@ -80,12 +80,13 @@ UPDATE `barang`
 
 -- No 2) Tampilkan kode,merk,harga,stock dan total harga
 SELECT
-  `id`,
-  `kode`,
-  `nama`,
-  `satuan`,
+  `barang`.`id`,
+  `barang`.`kode`,
+  `barang`.`nama`,
+  `barang`.`satuan`,
   SUM(`stock`.`jumlah`) AS `jumlah`,
-  `harga`.`nilai` AS `harga`
+  `harga`.`nilai` AS `harga`,
+  `harga`.`nilai` * SUM(`stock`.`jumlah`)  AS `total harga`
   FROM
     `barang`
   JOIN
@@ -99,6 +100,64 @@ SELECT
         WHERE `barang_id` = `barang`.`id`
       )
   GROUP BY
-    `barang`.`id`
+    `barang`.`id`;
 
 -- No 3) Tampilkan Merk dan Harga Yang memiliki satuan Botol dan Harganya di atas 2000
+SELECT
+  `nama` `Merk`,
+  `harga`.`nilai` AS `harga`
+  FROM
+    `barang`
+  JOIN
+    `harga` ON
+      `harga`.`barang_id` = `barang`.`id`
+      AND
+      `harga`.`tgl` = (
+        SELECT MAX(`tgl`) FROM `harga`
+        WHERE `barang_id` = `barang`.`id`
+      )
+  WHERE
+    `barang`.`satuan` = 'Botol'
+    AND
+    `harga`.`nilai` > 2000
+  GROUP BY
+    `barang`.`id`;
+
+-- No 4) Tampilkan merk dan jumlah stock paling sedikit
+SELECT
+  `nama` as `merk`,
+  `satuan`,
+  MIN(`stock`.`jumlah`) AS `jumlah`
+  FROM
+    `barang`
+  JOIN
+    `stock` ON `stock`.`barang_id` = `barang`.`id`;
+
+-- No 5) Tampilkan Jumlah Semua Stock
+SELECT SUM(`jumlah`) as `semua_stock` FROM `stock`;
+
+-- No 6) Tamilkan Jumlah
+SELECT SUM(`nilai`) as `total_semua_stock` FROM `harga`;
+
+-- No 7) Tampilakn jumlah dari seluruh karakter merk
+
+-- No 8) Tampilkan seluruh field yang jumlah karakternya < 10
+
+-- No 9) Tampilkan seluruh field yang harganya diantara 3000 - 5000
+SELECT
+  `nama` `Merk`,
+  `harga`.`nilai` AS `harga`
+  FROM
+    `barang`
+  JOIN
+    `harga` ON
+      `harga`.`barang_id` = `barang`.`id`
+      AND
+      `harga`.`tgl` = (
+        SELECT MAX(`tgl`) FROM `harga`
+        WHERE `barang_id` = `barang`.`id`
+      )
+  WHERE
+    `harga`.`nilai` BETWEEN 3000 AND 5000
+  GROUP BY
+    `barang`.`id`;
