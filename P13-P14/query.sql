@@ -200,3 +200,26 @@ GROUP BY
     rincian.Kelompok
 HAVING
     SUM(rincian.Jumlah) > 20000000;
+
+
+/*
+ * Daftar 3 terbesar menggunakan kelompok biaya
+ */
+
+ SELECT 
+	pesanan.NomorPesanan,
+    pesanan.JenisProduk,
+    pesanan.JmlPesanan,
+    rincian.Kelompok,
+    SUM(rincian.Jumlah) as `Kelompok Biaya`
+FROM 
+	RincianBiaya as rincian
+	JOIN
+    	KartuPesanan as pesanan ON 
+            pesanan.NomorPesanan = rincian.NomorPesanan
+GROUP BY
+	rincian.NomorPesanan,
+    rincian.kelompok
+ORDER BY
+    `Kelompok Biaya` DESC
+LIMIT 0,3;
