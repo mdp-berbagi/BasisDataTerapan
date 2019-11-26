@@ -56,7 +56,7 @@ CREATE PROCEDURE `ptreding_topic`()
         UNTIL (LENGTH(TEXT_ON_SEARCHER) >= LENGTH_TEXT) END REPEAT;
 
         -- Mengembalikan hasil dari pencarian
-        SELECT * FROM _TEMP_ptrading_topic;
+        SELECT * FROM _TEMP_ptrading_topic ORDER BY jumlah DESC;
         
         -- Hapus temporary table
         DROP TEMPORARY TABLE `_TEMP_ptrading_topic`;
@@ -64,3 +64,7 @@ CREATE PROCEDURE `ptreding_topic`()
 DELIMITER ;
 
 CALL `ptreding_topic`();
+
+
+
+
