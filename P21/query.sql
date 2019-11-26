@@ -17,7 +17,6 @@ DELIMITER |
 CREATE PROCEDURE `ptreding_topic`() 
     BEGIN
         -- Menyiapkan varibale hasil
-        DECLARE RESULT TEXT;
         DECLARE LENGTH_TEXT INT;
         DECLARE TEXT_ON_SEARCHER TEXT;
         DECLARE INDEX_FOR_SEARCHING INT;
@@ -27,9 +26,6 @@ CREATE PROCEDURE `ptreding_topic`()
         
         SET SYMBOL = "#";
         SET TEXTDATA = (SELECT GROUP_CONCAT(msg SEPARATOR " ") FROM post);
-
-        -- set hasil tanpa string
-        SET RESULT = "";
 
         -- Menyiapkan data maksimum teks
         SET LENGTH_TEXT = LENGTH(TEXTDATA);
@@ -55,15 +51,11 @@ CREATE PROCEDURE `ptreding_topic`()
                 	INTO `_TEMP_ptrading_topic` (hashtag, jumlah) 
                     VALUES (LAST_TEXT_IN_SEARCHING, 1)
                  	ON DUPLICATE KEY UPDATE jumlah = jumlah + 1;
-                    
-                
-                SET RESULT = CONCAT(RESULT, LAST_TEXT_IN_SEARCHING, ', ');
             END IF;
 
         UNTIL (LENGTH(TEXT_ON_SEARCHER) >= LENGTH_TEXT) END REPEAT;
 
         -- Mengembalikan hasil dari pencarian
-        SELECT RESULT;
         SELECT * FROM _TEMP_ptrading_topic;
         
         -- Hapus temporary table
