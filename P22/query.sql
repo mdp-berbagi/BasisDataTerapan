@@ -61,11 +61,10 @@ CREATE PROCEDURE `addpembelian`(
 )
 	BEGIN
     	DECLARE ID_PEMBELIAN INT;
-        DECLARE jumlahAkhir INT;
+        DECLARE stokAkhir INT;
         DECLARE hppAkhir INT;
         DECLARE totalBiayaHppLama INT;
         DECLARE totalBiayaHppBaru INT;
-        DECLARE hppBaru INT;
     	
         -- Buat Penbelian
     	INSERT 
@@ -90,21 +89,26 @@ CREATE PROCEDURE `addpembelian`(
             @hpp
         FROM
         	`hpp`
-        ORDER BY `tgl`
+        ORDER BY `tgl` DESC
         LIMIT 1;
         
-        -- Masukan ke variable tertentu
-        SET jumlahAkhir = (SELECT IFNULL(@jumlah, 0) + unit_dibeli);
-        SET totalBiayaHppLama = @jumlah * @hpp;
-        SET totalBiayaHppBaru = unit_dibeli * harga_beli;
-        SET hppBaru = (totalBiayaHppLama + totalBiayaHppBaru) /  jumlahAkhir;
-        
-        SET hppAkhir = IF(@hpp IS NULL, harga_beli, hppBaru);
+        IF @jumlah IS NULL THEN
+        	-- Jika ini adalah inputan pertama
+        	SET stokAkhir = unit_dibeli;
+            SET hppAkhir = harga_beli;
+        ELSE
+        	-- Jika sudah bukan inputan pertama
+        	SET stokAkhir = @jumlah + unit_dibeli;
+            SET totalBiayaHppLama = @jumlah * @hpp;
+            SET totalBiayaHppBaru = unit_dibeli * harga_beli;
+            SET hppAkhir = (totalBiayaHppLama + totalBiayaHppBaru) /  stokAkhir;
+        END IF;
+       
             
         -- Masukan hpp baru
         INSERT
        		`hpp`(`barang_id`, `tgl`, `jumlah`, `hpp`)
-            VALUES(id_barang, tglbeli, jumlahAkhir, hppAkhir);
+            VALUES(id_barang, tglbeli, stokAkhir, hppAkhir);
              
      END
 | DELIMITER ;
@@ -113,28 +117,91 @@ CREATE PROCEDURE `addpembelian`(
 
 DELIMITER |
 CREATE PROCEDURE `addpenjualan`(
-	tglbeli DATE, 
+	tgljual DATE, 
   	kodePO CHAR(5),
 	id_barang INT, 
-    unit_dibeli INT, 
-    harga_beli INT
+    unit_dijual INT, 
+    harga_jual INT
 )
-	BEGIN
+	penjualan:BEGIN
+    	DECLARE ID_PENJULAN INT;
+        DECLARE stockAkhir INT;
+        
+    	-- Buat Penjualan
+    	INSERT 
+        	INTO `pembelian`(`kode`, `tgl`) 
+            VALUES
+            	(kodePO, tgljual);
+        
+        -- Ambil Id Pelbelian
+        SET ID_PENJULAN = LAST_INSERT_ID();
     	
+        -- Membuat barang dalam pembelian
+    	INSERT 
+        	INTO `pembelian_barang`(`pembelian_id`, `barang_id`, `jumlah`, `harga`)
+            VALUES (ID_PENJULAN, id_barang, unit_dijual, harga_jual);
+            
+            
+        -- Ambil Hpp terakhir
+        SELECT
+        	jumlah,
+            hpp
+        INTO
+        	@jumlah,
+            @hpp
+        FROM
+        	`hpp`
+        ORDER BY `tgl` DESC
+        LIMIT 1;
+        
+        IF @jumlah IS NULL THEN
+        	-- Jika stok tidak ditemukan
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Tidak dapat menjual tanpa memiliki stok awal';
+            
+            LEAVE penjualan;
+        ELSE
+        	-- Jika stok ditemukan
+        	SET stockAkhir = @jumlah - unit_dijual;
+        END IF;
+       
+            
+        -- Masukan hpp baru
+        INSERT
+       		`hpp`(`barang_id`, `tgl`, `jumlah`, `hpp`)
+            VALUES(id_barang, tgljual, stockAkhir, @hpp);
+    END
+| DELIMITER ;
+
+DELIMITER |
+CREATE PROCEDURE `hpp`(kodeBarang INT)
+	BEGIN
+    	SELECT kodeBarang;
     END
 | DELIMITER ;
 
 
-
+-- Call prosedure
 CALL `addpembelian`("2019-01-02", "beli1", 1, 200, 9000);
 CALL `addpembelian`("2019-03-10", "beli2", 1, 300, 10000);
--- CALL `addpenjualan`("2019-01-02", "beli1", 1, 200, 11000);
 
+CALL `addpenjualan`("2019-04-05", "jual1", 1, 200, 11000);
+CALL `addpenjualan`("2019-05-07", "jual2", 1, 100, 0);
+
+CALL `addpembelian`("2019-09-21", "beli3", 1, 400, 11000);
+CALL `addpembelian`("2019-11-18", "beli4", 1, 100, 12000); 
+
+CALL `addpenjualan`("2019-11-20", "jual3", 1, 200, 0);
+CALL `addpenjualan`("2019-12-10", "jual4", 1, 200, 0);
+
+CALL `hpp`(1);
+
+-- review data table
 SELECT * FROM pembelian;
 SELECT * FROM pembelian_barang;
 SELECT * FROM hpp;
-
-
+SELECT * FROM penjualan;
+SELECT * FROM penjualan_barang;
 
 DROP DATABASE `tugas_app`;
 
