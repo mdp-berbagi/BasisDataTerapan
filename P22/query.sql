@@ -1,5 +1,10 @@
+-- DROP Database kalau pernah punya salah :-)
+DROP DATABASE IF EXISTS `tugas_app`;
+
 CREATE DATABASE `tugas_app`;
 USE `tugas_app`;
+
+SET sql_mode = 'STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,TRADITIONAL,NO_ENGINE_SUBSTITUTION';
 
 CREATE TABLE `pembelian`(
 	`id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -127,32 +132,34 @@ CREATE PROCEDURE `addpenjualan`(
     	DECLARE ID_PENJULAN INT;
         DECLARE stockAkhir INT;
         
-    	-- Buat Penjualan
-    	INSERT 
-        	INTO `pembelian`(`kode`, `tgl`) 
-            VALUES
-            	(kodePO, tgljual);
-        
-        -- Ambil Id Pelbelian
-        SET ID_PENJULAN = LAST_INSERT_ID();
-    	
-        -- Membuat barang dalam pembelian
-    	INSERT 
-        	INTO `pembelian_barang`(`pembelian_id`, `barang_id`, `jumlah`, `harga`)
-            VALUES (ID_PENJULAN, id_barang, unit_dijual, harga_jual);
-            
-            
         -- Ambil Hpp terakhir
         SELECT
+        	id,
         	jumlah,
             hpp
         INTO
+        	@id,
         	@jumlah,
             @hpp
         FROM
         	`hpp`
         ORDER BY `tgl` DESC
         LIMIT 1;
+        
+    	-- Buat Penjualan
+    	INSERT 
+        	INTO `penjualan`(`kode`, `tgl`) 
+            VALUES
+            	(kodePO, tgljual);
+        
+        -- Ambil Id Pembelian
+        SET ID_PENJULAN = LAST_INSERT_ID();
+        
+         -- Membuat barang dalam penjualan
+        
+        INSERT 
+        	INTO `penjualan_barang`(`penjualan_id`, `barang_id`, `jumlah`, `harga`, `hpp_id`)
+            VALUES (ID_PENJULAN, id_barang, unit_dijual, @hpp, @id);
         
         IF @jumlah IS NULL THEN
         	-- Jika stok tidak ditemukan
@@ -174,14 +181,46 @@ CREATE PROCEDURE `addpenjualan`(
 | DELIMITER ;
 
 DELIMITER |
-CREATE PROCEDURE `hpp`(kodeBarang INT)
+CREATE PROCEDURE `hpp`(id_barang INT)
 	BEGIN
-    	SELECT kodeBarang;
+    	SELECT 
+        	`hpp`.`tgl`, 
+            
+            IFNULL(`Xpembelian`.`jumlah`, ' -') as `Pembelian - Unit`,
+            IFNULL(`Xpembelian`.`harga`, ' -') as `Pembelian - Harga /unit`,
+            IFNULL(`Xpembelian`.`harga` * `Xpembelian`.`jumlah`, ' -') as `Pembelian - Total Harga`,
+            
+            IFNULL(`Xpenjualan`.`jumlah`, ' -') as `Penjualan - Unit`,
+            IFNULL(`Xpenjualan`.`harga`, ' -') as `Penjualan - Harga /unit`,
+            IFNULL(`Xpenjualan`.`harga` * `Xpenjualan`.`jumlah`, ' -') as `Penjualan - Total Harga`,
+            
+            `hpp`.`jumlah` as `HPP - unit`,
+            `hpp`.`hpp` as  `HPP - Harga /unit`,
+            `hpp`.`jumlah` * hpp.hpp as `HPP - Total harga`
+        FROM
+        	`hpp`
+        LEFT JOIN 
+        	(SELECT * FROM `pembelian_barang` JOIN pembelian ON pembelian.id = pembelian_barang.pembelian_id) as `Xpembelian`
+            ON
+            	`Xpembelian`.`barang_id` = `hpp`.`barang_id`
+                AND
+                `hpp`.`tgl` = `Xpembelian`.`tgl`
+        LEFT JOIN
+        	(SELECT * FROM `penjualan_barang` JOIN penjualan ON penjualan.id = penjualan_barang.penjualan_id) as `Xpenjualan`
+            ON
+              `Xpenjualan`.`barang_id` = `hpp`.`barang_id`
+              AND
+              `hpp`.`tgl` = `Xpenjualan`.`tgl`
+        WHERE
+        	`hpp`.`barang_id` = id_barang
+        GROUP BY
+        	`hpp`.`tgl`, `Xpembelian`.`tgl`, `Xpenjualan`.`tgl`
+        ;
     END
 | DELIMITER ;
 
 
--- Call prosedure
+-- Call insert prosedure
 CALL `addpembelian`("2019-01-02", "beli1", 1, 200, 9000);
 CALL `addpembelian`("2019-03-10", "beli2", 1, 300, 10000);
 
@@ -194,8 +233,6 @@ CALL `addpembelian`("2019-11-18", "beli4", 1, 100, 12000);
 CALL `addpenjualan`("2019-11-20", "jual3", 1, 200, 0);
 CALL `addpenjualan`("2019-12-10", "jual4", 1, 200, 0);
 
-CALL `hpp`(1);
-
 -- review data table
 SELECT * FROM pembelian;
 SELECT * FROM pembelian_barang;
@@ -203,15 +240,8 @@ SELECT * FROM hpp;
 SELECT * FROM penjualan;
 SELECT * FROM penjualan_barang;
 
+-- Call report procedure
+CALL `hpp`(1);
+
+-- Clean DB
 DROP DATABASE `tugas_app`;
-
-
-
-
-
-
-
-
-
-
-
