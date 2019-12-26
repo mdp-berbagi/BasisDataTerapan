@@ -55,4 +55,3 @@ ALTER TABLE `menu2` PARTITION BY HASH (YEAR(`tgl`))
 );
 
 DROP DATABASE IF EXISTS `learnPartition`;
-
