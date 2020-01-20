@@ -34,7 +34,7 @@ DELIMITER ;
 ```
 
 ### Mengapus
-DROP TRIGGER trigger_name;
+`DROP TRIGGER trigger_name;`
 
 ## Event
 Meberikan Perintah pada waktu yang ditentukan, bentuk waktu bisa berbentuk interval atau sekali jalan pada waktu tertentu (timeout), 
@@ -78,3 +78,28 @@ DELIMITER ;
 
 ### Drop
 `DROP EVENT namaEvent;`
+
+## Procedure
+Membuat kode panjangan pada aplikasi dapat di panggil ulang tanpa nilai balik
+
+### Penggunaan
+Format:
+```
+DELIMITER |
+CREATE PROCEDURE [ nama prosedur ] ([ semua parameter :[ format : [nama parameter] [type] ] ])
+BEGIN
+    [ DECLARE ]
+    [ Fungsi Query Bebas ]
+END
+```
+Contoh :
+```
+DELIMITER |
+CREATE PROCEDURE `mhs_creator`(namaInput VARCHAR(255), kode_jurusan CHAR(2))
+BEGIN
+    SELECT namaImput, kode_jurusan;
+END
+```
+
+### Drop
+`DROP PROCEDURE namaProsedur;`
