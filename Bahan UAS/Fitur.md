@@ -140,3 +140,38 @@ END
 ### Pemanggilan 
 `SELECT namaFungsi()` atau `SELECT namaFungsi(akun.nama) from akun`
 Wajib dengan () di setiap pemanggilan prosedur walaupun fungsi tanpa parameter
+
+## Logika IF
+Untuk membuat percabangan
+
+### Penggunaan
+Format : 
+```
+IF [ KONDISI : [ AND atau OR atau tanpa keduanya ]] THEN
+    [ QUERY BEBAS ]
+END IF;
+```
+Contoh :
+```
+IF 1 > 3 THEN
+    SELECT 'sukses';
+END IF;
+```
+
+## Perulanggan ( Loop )
+Mengulang Query
+
+### Penggunaan
+Format : 
+```
+REPEAT
+    [ QUERY BEBAS ]
+UNTIL [ CONDITION IS TRUE ] END REPEAT;
+```
+Contoh :
+```
+... Declare X
+REPEAT
+    SET X = X + 1;
+UNTIL X > 4 END REPEAT;
+```
