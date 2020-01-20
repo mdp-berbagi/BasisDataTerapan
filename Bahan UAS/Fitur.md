@@ -80,7 +80,7 @@ DELIMITER ;
 `DROP EVENT namaEvent;`
 
 ## Procedure
-Membuat kode panjangan pada aplikasi dapat di panggil ulang tanpa nilai balik
+Membuat kode panjangan menjadi pendek karna dapat di panggil ulang *tanpa nilai balik*
 
 ### Penggunaan
 Format:
@@ -89,8 +89,41 @@ DELIMITER |
 CREATE PROCEDURE [ nama prosedur ] ([ semua parameter :[ format : [nama parameter] [type] ] ])
 BEGIN
     [ DECLARE ]
-    [ Fungsi Query Bebas ]
+    [ QUERY BEBAS ]
 END
+```
+Contoh :
+```
+DELIMITER |
+CREATE PROCEDURE `mhs_creator`(namaInput VARCHAR(255), kode_jurusan CHAR(2))
+BEGIN
+    SELECT namaImput, kode_jurusan;
+END |   
+DELIMITER ;
+```
+
+### Drop
+`DROP PROCEDURE namaProsedur;`
+
+### Pemanggilan 
+`CALL namaProsedur();`
+Wajib dengan () di setiap pemanggilan prosedur walaupun prosedur tanpa parameter
+
+## Fungsi
+Membuat kode panjangan menjadi pendek karna dapat di panggil ulang dan *memiliki nilai balik*
+
+### Penggunaan
+Format:
+```
+DELIMITER |
+CREATE FUNCTION `symbol_pattern_getter`(TEXTDATA TEXT, SYMBOL TEXT) 
+RETURNS TEXT
+BEGIN
+    [ DECLARE ]
+    [ QUERY BEBAS ]
+    [ RETURN ]
+END |   
+DELIMITER ;
 ```
 Contoh :
 ```
@@ -103,3 +136,7 @@ END
 
 ### Drop
 `DROP PROCEDURE namaProsedur;`
+
+### Pemanggilan 
+`SELECT namaFungsi()` atau `SELECT namaFungsi(akun.nama) from akun`
+Wajib dengan () di setiap pemanggilan prosedur walaupun fungsi tanpa parameter
